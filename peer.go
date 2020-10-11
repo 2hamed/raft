@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"net"
+)
 
 type Peer struct {
 	Host string
@@ -9,6 +12,25 @@ type Peer struct {
 
 func (p *Peer) String() string {
 	return fmt.Sprintf("%s:%d", p.Host, p.Port)
+}
+
+func (p *Peer) Equals(other Peer) bool {
+	return p.Host == other.Host && p.Port == other.Port
+}
+
+func (p *Peer) SendMessage(msg Message) error {
+	raddr, err := net.ResolveUDPAddr("udp", p.String())
+	if err != nil {
+		return err
+	}
+	conn, err := net.DialUDP("udp", nil, raddr)
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Write(msg.Json())
+
+	return nil
 }
 
 type Peers []Peer
@@ -27,4 +49,11 @@ func (peers *Peers) PrintInfo() {
 	for _, p := range *peers {
 		fmt.Printf("%s: %d\n", p.Host, p.Port)
 	}
+}
+
+func (peers *Peers) BroadcastMessage(msg Message) (err error) {
+	for _, p := range *peers {
+		err = p.SendMessage(msg)
+	}
+	return err
 }

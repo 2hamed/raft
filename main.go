@@ -14,13 +14,13 @@ func main() {
 
 	flag.Parse()
 
-	coord := NewCoordinator()
+	coord := NewCoordinator("127.0.0.1", *port)
 	forever := make(chan bool)
 
 	startUDPServer(*port, coord)
 
 	if *peerPort != 0 {
-		joinCluster(*port, Peer{*peerHost, *peerPort})
+		coord.joinCluster(*port, Peer{*peerHost, *peerPort})
 	}
 
 	<-forever
@@ -49,21 +49,4 @@ func startUDPServer(port int, coord *Coordinator) {
 			coord.ProcessMessage(message)
 		}
 	}()
-}
-
-func joinCluster(port int, peer Peer) error {
-	raddr, err := net.ResolveUDPAddr("udp", peer.String())
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Joining peer on %s:%d\n", peer.Host, peer.Port)
-
-	conn, err := net.DialUDP("udp", nil, raddr)
-	if err != nil {
-		return err
-	}
-
-	_, err = conn.Write(NewRegisterMessage("127.0.0.1", port).Json())
-
-	return err
 }

@@ -21,3 +21,20 @@ func NewRegisterMessage(listenAddr string, listenPort int) Message {
 		Payload: string(payload),
 	}
 }
+func NewReanounceMessage(listenAddr string, listenPort int) Message {
+
+	payload, _ := json.Marshal(Peer{listenAddr, listenPort})
+	return Message{
+		Ops:     "reanounce",
+		Payload: string(payload),
+	}
+}
+func NewPropogateMessage(listenAddr string, listenPort int) Message {
+
+	payload, _ := json.Marshal(Peer{listenAddr, listenPort})
+	return Message{
+		Ops:     "propogate",
+		Payload: string(payload),
+	}
+}
+
