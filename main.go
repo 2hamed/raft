@@ -15,6 +15,7 @@ func main() {
 	flag.Parse()
 
 	coord := NewCoordinator("127.0.0.1", *port)
+
 	forever := make(chan bool)
 
 	startUDPServer(*port, coord)

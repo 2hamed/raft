@@ -57,3 +57,7 @@ func (peers *Peers) BroadcastMessage(msg Message) (err error) {
 	}
 	return err
 }
+
+func (peers *Peers) Quorum() int {
+	return len(*peers)/2 + 1
+}

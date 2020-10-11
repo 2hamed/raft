@@ -6,11 +6,17 @@ type Message struct {
 	Ops string `json:"ops"`
 
 	Payload string `json:"payload"`
+	Sender  Peer   `json:"sender"`
 }
 
 func (m Message) Json() []byte {
 	json, _ := json.Marshal(m)
 	return json
+}
+
+func (m Message) WithSender(sender Peer) Message {
+	m.Sender = sender
+	return m
 }
 
 func NewRegisterMessage(listenAddr string, listenPort int) Message {
@@ -38,3 +44,20 @@ func NewPropogateMessage(listenAddr string, listenPort int) Message {
 	}
 }
 
+func NewPromoteMessage() Message {
+	return Message{
+		Ops: "promote",
+	}
+}
+
+func NewHeartbeatMessage() Message {
+	return Message{
+		Ops: "beat",
+	}
+}
+
+func NewVoteMessage() Message {
+	return Message{
+		Ops: "vote",
+	}
+}
