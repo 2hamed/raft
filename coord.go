@@ -11,8 +11,9 @@ type Coordinator struct {
 	Peers Peers
 	Timer *RaftTimer
 
-	heartBeat chan struct{}
-	isElected bool
+	heartBeat   chan struct{}
+	isElected   bool
+	isCandidate bool
 
 	votes int
 }
@@ -34,13 +35,14 @@ func NewCoordinator(host string, port int) *Coordinator {
 					c.sendHeartbeat()
 				}
 			case <-c.Timer.TimeoutSignal():
+				c.isCandidate = true
 				c.PromoteSelf()
 			}
 		}
 	}()
 
 	go func() {
-		ticker := time.Tick(100 * time.Millisecond)
+		ticker := time.Tick(50 * time.Millisecond)
 		for {
 			<-ticker
 			if c.isElected {
@@ -62,7 +64,9 @@ func (c *Coordinator) ProcessMessage(msg Message) error {
 	case "beat":
 		c.heartBeat <- struct{}{}
 	case "promote":
-		c.sendVote(msg.Sender)
+		if !c.isCandidate && !c.isElected {
+			c.sendVote(msg.Sender)
+		}
 	case "vote":
 		c.votes++
 		if c.votes >= c.Peers.Quorum() {
@@ -121,6 +125,7 @@ func (c *Coordinator) reanounceSelf() error {
 
 func (c *Coordinator) PromoteSelf() error {
 	fmt.Println("Starting election...")
+	c.votes = 1
 	return c.broadcastMessage(NewPromoteMessage().WithSender(c.Self))
 }
 

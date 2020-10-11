@@ -30,7 +30,7 @@ func (p *Peer) SendMessage(msg Message) error {
 
 	_, err = conn.Write(msg.Json())
 
-	return nil
+	return err
 }
 
 type Peers []Peer
@@ -52,12 +52,19 @@ func (peers *Peers) PrintInfo() {
 }
 
 func (peers *Peers) BroadcastMessage(msg Message) (err error) {
-	for _, p := range *peers {
+	for i, p := range *peers {
 		err = p.SendMessage(msg)
+		if err != nil {
+			p := *peers
+			slice1 := p[:i]
+			slice2 := p[i+1:]
+			p = append(slice1, slice2...)
+			peers = &p
+		}
 	}
 	return err
 }
 
 func (peers *Peers) Quorum() int {
-	return len(*peers)/2 + 1
+	return (len(*peers)+1)/2 + 1
 }
