@@ -3,7 +3,13 @@ package main
 import "encoding/json"
 
 type Coordinator struct {
-	Peers []Peer
+	Peers Peers
+}
+
+func NewCoordinator() *Coordinator {
+	return &Coordinator{
+		Peers: make(Peers, 0),
+	}
 }
 
 func (c *Coordinator) ProcessMessage(msg Message) error {
@@ -26,6 +32,9 @@ func (c *Coordinator) ProcessMessage(msg Message) error {
 }
 
 func (c *Coordinator) registerPeer(peer Peer) error {
-
+	if !c.Peers.Contains(peer) {
+		c.Peers = append(c.Peers, peer)
+	}
+	c.Peers.PrintInfo()
 	return nil
 }
