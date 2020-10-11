@@ -41,7 +41,7 @@ func startUDPServer(port int, coord *Coordinator) {
 			}
 			fmt.Printf("Read %d bytes from %v, Body: %s\n", n, addr, (msg))
 			var message Message
-			if err := json.Unmarshal(msg, &message); err != nil {
+			if err := json.Unmarshal(msg[:n], &message); err != nil {
 				fmt.Printf("Error in unmarshaling the message: %v\n", err)
 				continue
 			}
