@@ -27,6 +27,7 @@ func (p *Peer) SendMessage(msg Message) error {
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
 
 	_, err = conn.Write(msg.Json())
 
@@ -52,14 +53,12 @@ func (peers *Peers) PrintInfo() {
 }
 
 func (peers *Peers) BroadcastMessage(msg Message) (err error) {
+	failedPeers := make([]int, 0)
 	for i, p := range *peers {
 		err = p.SendMessage(msg)
 		if err != nil {
-			p := *peers
-			slice1 := p[:i]
-			slice2 := p[i+1:]
-			p = append(slice1, slice2...)
-			peers = &p
+			fmt.Printf("Sending message to peer %s failed: %v\n", p.String(), err)
+			failedPeers = append(failedPeers, i)
 		}
 	}
 	return err
