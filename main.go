@@ -10,15 +10,16 @@ import (
 func main() {
 	peerHost := flag.String("phost", "127.0.0.1", "peer host")
 	peerPort := flag.Int("pport", 0, "peer port")
+	addr := flag.String("addr", "127.0.0.1", "network address to listen on")
 	port := flag.Int("port", 3000, "port to listen on")
 
 	flag.Parse()
 
-	coord := NewCoordinator("127.0.0.1", *port)
+	coord := NewCoordinator(*addr, *port)
 
 	forever := make(chan bool)
 
-	startUDPServer(*port, coord)
+	startUDPServer(*addr, *port, coord)
 
 	if *peerPort != 0 {
 		coord.joinCluster(*port, Peer{*peerHost, *peerPort})
@@ -27,9 +28,9 @@ func main() {
 	<-forever
 }
 
-func startUDPServer(port int, coord *Coordinator) {
+func startUDPServer(addr string, port int, coord *Coordinator) {
 	fmt.Println("UDP server listening on port: ", port)
-	listener, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4(127, 0, 0, 1), Port: port})
+	listener, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP(addr), Port: port})
 	if err != nil {
 		panic(err)
 	}
