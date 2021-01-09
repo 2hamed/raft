@@ -1,10 +1,7 @@
-package main
+package raft
 
 import (
-	"encoding/json"
 	"flag"
-	"fmt"
-	"net"
 )
 
 func main() {
@@ -29,26 +26,5 @@ func main() {
 }
 
 func startUDPServer(addr string, port int, coord *Coordinator) {
-	fmt.Println("UDP server listening on port: ", port)
-	listener, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP(addr), Port: port})
-	if err != nil {
-		panic(err)
-	}
-	go func() {
-		for {
-			var msg = make([]byte, 1024)
-			n, addr, err := listener.ReadFromUDP(msg)
-			if err != nil {
-				panic(err)
-			}
-			fmt.Printf("Read %d bytes from %v, Body: %s\n", n, addr, (msg))
-			var message Message
-			if err := json.Unmarshal(msg[:n], &message); err != nil {
-				fmt.Printf("Error in unmarshaling the message: %v\n", err)
-				continue
-			}
-
-			coord.ProcessMessage(message)
-		}
-	}()
+	
 }
