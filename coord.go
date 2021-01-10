@@ -114,9 +114,9 @@ func (c *Coordinator) registerPeer(peer Peer) error {
 	return nil
 }
 
-func (c *Coordinator) joinCluster(port int, peer Peer) error {
+func (c *Coordinator) joinCluster(nodeListenAddr string, nodePort int, peer Peer) error {
 	fmt.Printf("Joining peer on %s:%d\n", peer.Host, peer.Port)
-	return peer.SendMessage(NewRegisterMessage("127.0.0.1", port).WithSender(c.Self))
+	return peer.SendMessage(NewRegisterMessage(nodeListenAddr, nodePort).WithSender(c.Self))
 }
 
 func (c *Coordinator) reanounceSelf() error {

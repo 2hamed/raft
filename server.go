@@ -3,6 +3,7 @@ package raft
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 )
@@ -12,6 +13,8 @@ type RaftServer struct {
 
 	coord *Coordinator
 }
+
+var started = false
 
 func NewRaftServer(options ...OptionFunc) *RaftServer {
 	opts := &Options{}
@@ -25,26 +28,32 @@ func NewRaftServer(options ...OptionFunc) *RaftServer {
 	}
 }
 
-func (r *RaftServer) Start(ctx context.Context) {
+func (r *RaftServer) Start(ctx context.Context) error {
 	fmt.Printf("UDP server listening on %s:%d .", r.options.listenAddr, r.options.listenPort)
 	listener, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP(r.options.listenAddr), Port: r.options.listenPort})
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("Failed starting the UDP server, %w", err)
 	}
+
 	msgChan := make(chan []byte)
+
 	go func() {
-		var msg = make([]byte, 1024)
-		n, _, err := listener.ReadFromUDP(msg)
-		if err != nil {
-			panic(err)
+		for {
+			msg := make([]byte, 1024)
+			n, _, err := listener.ReadFromUDP(msg)
+			if err != nil {
+				fmt.Println("Error reading message from UDP:", err)
+				continue
+			}
+			msgChan <- msg[:n]
 		}
-		msgChan <- msg[:n]
 	}()
+
 	for {
 		select {
 		case <-ctx.Done():
 			fmt.Println("Shutting down raft...")
-			return
+			return nil
 		case m := <-msgChan:
 			var message Message
 			if err := json.Unmarshal(m, &message); err != nil {
@@ -55,4 +64,12 @@ func (r *RaftServer) Start(ctx context.Context) {
 			r.coord.ProcessMessage(message)
 		}
 	}
+}
+
+func (r *RaftServer) JoinCluster(ctx context.Context, peerHost string, peerPort int) error {
+	if !started {
+		return errors.New("Call Start first")
+	}
+
+	return r.coord.joinCluster(r.options.listenAddr, r.options.listenPort, Peer{peerHost, peerPort})
 }
