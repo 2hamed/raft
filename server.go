@@ -31,20 +31,23 @@ func (r *RaftServer) Start(ctx context.Context) {
 	if err != nil {
 		panic(err)
 	}
+	msgChan := make(chan []byte)
+	go func() {
+		var msg = make([]byte, 1024)
+		n, _, err := listener.ReadFromUDP(msg)
+		if err != nil {
+			panic(err)
+		}
+		msgChan <- msg[:n]
+	}()
 	for {
 		select {
 		case <-ctx.Done():
 			fmt.Println("Shutting down raft...")
 			return
-		default:
-			var msg = make([]byte, 1024)
-			n, addr, err := listener.ReadFromUDP(msg)
-			if err != nil {
-				panic(err)
-			}
-			fmt.Printf("Read %d bytes from %v, Body: %s\n", n, addr, (msg))
+		case m := <-msgChan:
 			var message Message
-			if err := json.Unmarshal(msg[:n], &message); err != nil {
+			if err := json.Unmarshal(m, &message); err != nil {
 				fmt.Printf("Error in unmarshaling the message: %v\n", err)
 				continue
 			}
