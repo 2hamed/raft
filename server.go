@@ -26,13 +26,17 @@ func NewRaftServer(options ...OptionFunc) *RaftServer {
 }
 
 func (r *RaftServer) Start(ctx context.Context) {
-	fmt.Println("UDP server listening on port: ", r.options.listenPort)
+	fmt.Printf("UDP server listening on %s:%d .", r.options.listenAddr, r.options.listenPort)
 	listener, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP(r.options.listenAddr), Port: r.options.listenPort})
 	if err != nil {
 		panic(err)
 	}
-	go func() {
-		for {
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Shutting down raft...")
+			return
+		default:
 			var msg = make([]byte, 1024)
 			n, addr, err := listener.ReadFromUDP(msg)
 			if err != nil {
@@ -47,5 +51,5 @@ func (r *RaftServer) Start(ctx context.Context) {
 
 			r.coord.ProcessMessage(message)
 		}
-	}()
+	}
 }
