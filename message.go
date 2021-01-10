@@ -2,62 +2,62 @@ package raft
 
 import "encoding/json"
 
-type Message struct {
+type message struct {
 	Ops string `json:"ops"`
 
 	Payload string `json:"payload"`
-	Sender  Peer   `json:"sender"`
+	Sender  peer   `json:"sender"`
 }
 
-func (m Message) Json() []byte {
+func (m message) Json() []byte {
 	json, _ := json.Marshal(m)
 	return json
 }
 
-func (m Message) WithSender(sender Peer) Message {
+func (m message) WithSender(sender peer) message {
 	m.Sender = sender
 	return m
 }
 
-func NewRegisterMessage(listenAddr string, listenPort int) Message {
+func NewRegisterMessage(listenAddr string, listenPort int) message {
 
-	payload, _ := json.Marshal(Peer{listenAddr, listenPort})
-	return Message{
+	payload, _ := json.Marshal(peer{listenAddr, listenPort})
+	return message{
 		Ops:     "register",
 		Payload: string(payload),
 	}
 }
-func NewReanounceMessage(listenAddr string, listenPort int) Message {
+func NewReanounceMessage(listenAddr string, listenPort int) message {
 
-	payload, _ := json.Marshal(Peer{listenAddr, listenPort})
-	return Message{
+	payload, _ := json.Marshal(peer{listenAddr, listenPort})
+	return message{
 		Ops:     "reanounce",
 		Payload: string(payload),
 	}
 }
-func NewPropogateMessage(listenAddr string, listenPort int) Message {
+func NewPropogateMessage(listenAddr string, listenPort int) message {
 
-	payload, _ := json.Marshal(Peer{listenAddr, listenPort})
-	return Message{
+	payload, _ := json.Marshal(peer{listenAddr, listenPort})
+	return message{
 		Ops:     "propogate",
 		Payload: string(payload),
 	}
 }
 
-func NewPromoteMessage() Message {
-	return Message{
+func NewPromoteMessage() message {
+	return message{
 		Ops: "promote",
 	}
 }
 
-func NewHeartbeatMessage() Message {
-	return Message{
+func NewHeartbeatMessage() message {
+	return message{
 		Ops: "beat",
 	}
 }
 
-func NewVoteMessage() Message {
-	return Message{
+func NewVoteMessage() message {
+	return message{
 		Ops: "vote",
 	}
 }

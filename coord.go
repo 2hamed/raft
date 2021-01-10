@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-type Coordinator struct {
-	Self  Peer
+type coordinator struct {
+	Self  peer
 	Peers Peers
 	Timer *RaftTimer
 
@@ -18,10 +18,10 @@ type Coordinator struct {
 	votes int
 }
 
-func NewCoordinator(host string, port int) *Coordinator {
-	c := &Coordinator{
+func NewCoordinator(host string, port int) *coordinator {
+	c := &coordinator{
 		Peers:     make(Peers, 0),
-		Self:      Peer{host, port},
+		Self:      peer{host, port},
 		Timer:     NewTimer(),
 		heartBeat: make(chan struct{}, 10),
 	}
@@ -36,7 +36,7 @@ func NewCoordinator(host string, port int) *Coordinator {
 				}
 			case <-c.Timer.TimeoutSignal():
 				c.isCandidate = true
-				c.PromoteSelf()
+				c.promoteSelf()
 			}
 		}
 	}()
@@ -56,7 +56,7 @@ func NewCoordinator(host string, port int) *Coordinator {
 	return c
 }
 
-func (c *Coordinator) ProcessMessage(msg Message) error {
+func (c *coordinator) ProcessMessage(msg message) error {
 
 	switch msg.Ops {
 	case "register", "reanounce", "propogate":
@@ -78,12 +78,12 @@ func (c *Coordinator) ProcessMessage(msg Message) error {
 	return nil
 }
 
-func (c *Coordinator) broadcastMessage(msg Message) error {
+func (c *coordinator) broadcastMessage(msg message) error {
 	return c.Peers.BroadcastMessage(msg)
 }
 
-func (c *Coordinator) peerInfoReceived(msg Message) error {
-	var p Peer
+func (c *coordinator) peerInfoReceived(msg message) error {
+	var p peer
 	if err := json.Unmarshal([]byte(msg.Payload), &p); err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func (c *Coordinator) peerInfoReceived(msg Message) error {
 	c.Peers.PrintInfo()
 	return nil
 }
-func (c *Coordinator) registerPeer(peer Peer) error {
+func (c *coordinator) registerPeer(peer peer) error {
 	if !c.Peers.Contains(peer) {
 		c.Peers = append(c.Peers, peer)
 	}
@@ -114,25 +114,25 @@ func (c *Coordinator) registerPeer(peer Peer) error {
 	return nil
 }
 
-func (c *Coordinator) joinCluster(nodeListenAddr string, nodePort int, peer Peer) error {
+func (c *coordinator) joinCluster(nodeListenAddr string, nodePort int, peer peer) error {
 	fmt.Printf("Joining peer on %s:%d\n", peer.Host, peer.Port)
 	return peer.SendMessage(NewRegisterMessage(nodeListenAddr, nodePort).WithSender(c.Self))
 }
 
-func (c *Coordinator) reanounceSelf() error {
+func (c *coordinator) reanounceSelf() error {
 	return c.broadcastMessage(NewReanounceMessage(c.Self.Host, c.Self.Port).WithSender(c.Self))
 }
 
-func (c *Coordinator) PromoteSelf() error {
+func (c *coordinator) promoteSelf() error {
 	fmt.Println("Starting election...")
 	c.votes = 1
 	return c.broadcastMessage(NewPromoteMessage().WithSender(c.Self))
 }
 
-func (c *Coordinator) sendHeartbeat() error {
+func (c *coordinator) sendHeartbeat() error {
 	return c.broadcastMessage(NewHeartbeatMessage().WithSender(c.Self))
 }
 
-func (c *Coordinator) sendVote(target Peer) error {
+func (c *coordinator) sendVote(target peer) error {
 	return target.SendMessage(NewVoteMessage().WithSender(c.Self))
 }

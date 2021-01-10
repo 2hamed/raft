@@ -5,20 +5,20 @@ import (
 	"net"
 )
 
-type Peer struct {
+type peer struct {
 	Host string
 	Port int
 }
 
-func (p *Peer) String() string {
+func (p *peer) String() string {
 	return fmt.Sprintf("%s:%d", p.Host, p.Port)
 }
 
-func (p *Peer) Equals(other Peer) bool {
+func (p *peer) Equals(other peer) bool {
 	return p.Host == other.Host && p.Port == other.Port
 }
 
-func (p *Peer) SendMessage(msg Message) error {
+func (p *peer) SendMessage(msg message) error {
 	raddr, err := net.ResolveUDPAddr("udp", p.String())
 	if err != nil {
 		return err
@@ -34,9 +34,9 @@ func (p *Peer) SendMessage(msg Message) error {
 	return err
 }
 
-type Peers []Peer
+type Peers []peer
 
-func (peers *Peers) Contains(peer Peer) bool {
+func (peers *Peers) Contains(peer peer) bool {
 	for _, p := range *peers {
 		if p.Host == peer.Host && p.Port == peer.Port {
 			return true
@@ -52,7 +52,7 @@ func (peers *Peers) PrintInfo() {
 	}
 }
 
-func (peers *Peers) BroadcastMessage(msg Message) (err error) {
+func (peers *Peers) BroadcastMessage(msg message) (err error) {
 	failedPeers := make([]int, 0)
 	for i, p := range *peers {
 		err = p.SendMessage(msg)

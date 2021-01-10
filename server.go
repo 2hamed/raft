@@ -11,7 +11,7 @@ import (
 type RaftServer struct {
 	options Options
 
-	coord *Coordinator
+	coord *coordinator
 }
 
 var started = false
@@ -55,7 +55,7 @@ func (r *RaftServer) Start(ctx context.Context) error {
 			fmt.Println("Shutting down raft...")
 			return nil
 		case m := <-msgChan:
-			var message Message
+			var message message
 			if err := json.Unmarshal(m, &message); err != nil {
 				fmt.Printf("Error in unmarshaling the message: %v\n", err)
 				continue
@@ -71,5 +71,5 @@ func (r *RaftServer) JoinCluster(ctx context.Context, peerHost string, peerPort 
 		return errors.New("Call Start first")
 	}
 
-	return r.coord.joinCluster(r.options.listenAddr, r.options.listenPort, Peer{peerHost, peerPort})
+	return r.coord.joinCluster(r.options.listenAddr, r.options.listenPort, peer{peerHost, peerPort})
 }
