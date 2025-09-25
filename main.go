@@ -1,17 +1,19 @@
 package main
 
 import (
-	"encoding/json"
-	"flag"
-	"fmt"
-	"net"
+    "encoding/json"
+    "flag"
+    "fmt"
+    "net"
 )
 
+// main parses command-line flags, initializes a Coordinator, starts the UDP
+// server, and optionally joins an existing cluster.
 func main() {
-	peerHost := flag.String("phost", "127.0.0.1", "peer host")
-	peerPort := flag.Int("pport", 0, "peer port")
-	addr := flag.String("addr", "127.0.0.1", "network address to listen on")
-	port := flag.Int("port", 3000, "port to listen on")
+    peerHost := flag.String("phost", "127.0.0.1", "peer host")
+    peerPort := flag.Int("pport", 0, "peer port")
+    addr := flag.String("addr", "127.0.0.1", "network address to listen on")
+    port := flag.Int("port", 3000, "port to listen on")
 
 	flag.Parse()
 
@@ -28,12 +30,14 @@ func main() {
 	<-forever
 }
 
+// startUDPServer starts a UDP server that listens for incoming messages
+// and passes them to the Coordinator for processing.
 func startUDPServer(addr string, port int, coord *Coordinator) {
-	fmt.Println("UDP server listening on port: ", port)
-	listener, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP(addr), Port: port})
-	if err != nil {
-		panic(err)
-	}
+    fmt.Println("UDP server listening on port: ", port)
+    listener, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP(addr), Port: port})
+    if err != nil {
+        panic(err)
+    }
 	go func() {
 		for {
 			var msg = make([]byte, 1024)
